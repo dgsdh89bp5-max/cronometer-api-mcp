@@ -140,6 +140,34 @@ which owns the HTTP listener and exposes MCP streamable-HTTP at `/mcp`. The
 server has **no built-in authentication** — any remote deployment must sit
 behind an authenticating gateway or reverse proxy.
 
+### Prefect Horizon (Claude.ai and Claude mobile)
+
+[Prefect Horizon](https://horizon.prefect.io/) can build this Python MCP
+server directly from source and provide the remote transport and OAuth gateway;
+the repository's Dockerfile and `supergateway` wrapper are not used.
+
+Recommended secure configuration:
+
+1. Fork this repository into the GitHub account connected to Horizon.
+2. Create a hosted server in Horizon from the fork.
+3. Set the entrypoint to `horizon_readonly.py:mcp`. Use `main.py:mcp` only if
+   diary write tools are intentionally required.
+4. Leave the dependency field blank so Horizon discovers `uv.lock` and
+   `pyproject.toml`.
+5. Add `CRONOMETER_USERNAME` and `CRONOMETER_PASSWORD` as encrypted Production
+   environment variables. Add `CRONOMETER_ACCOUNT_TZ` only when an explicit
+   timezone override is required.
+6. Keep **Horizon Authentication enabled**. Never expose this server as an
+   unauthenticated public endpoint.
+7. Deploy, then copy the resulting `/mcp` URL into Claude at
+   **Customize > Connectors > Add custom connector** and complete Horizon's
+   OAuth sign-in. Remote connectors are account-level, so the same connector is
+   then available in Claude mobile.
+
+The read-only entrypoint exposes food logs, nutrition, food search, targets,
+fasting, and biometrics, but it does not register `add_food_entry`,
+`remove_food_entry`, `add_custom_food`, `copy_day`, or `mark_day_complete`.
+
 ## Development
 
 For local development, copy `.env.example` to `.env` and fill in your credentials:
