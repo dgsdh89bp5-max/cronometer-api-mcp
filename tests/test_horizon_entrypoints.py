@@ -29,10 +29,14 @@ def test_full_horizon_entrypoint_exposes_existing_surface():
 
 
 def test_read_only_horizon_entrypoint_omits_all_write_tools():
+    from fastmcp import FastMCP
+
     from horizon_readonly import mcp
 
     tools = asyncio.run(mcp.list_tools())
 
+    assert isinstance(mcp, FastMCP)
     assert {tool.name for tool in tools} == READ_ONLY_TOOLS
     assert READ_ONLY_TOOLS < EXPECTED_TOOLS
     assert all(tool.annotations.readOnlyHint is True for tool in tools)
+    assert all(tool.output_schema is None for tool in tools)
