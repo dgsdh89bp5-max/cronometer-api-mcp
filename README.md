@@ -150,8 +150,8 @@ Recommended secure configuration:
 
 1. Fork this repository into the GitHub account connected to Horizon.
 2. Create a hosted server in Horizon from the fork.
-3. Set the entrypoint to `horizon_readonly.py:mcp`. Use `main.py:mcp` only if
-   diary write tools are intentionally required.
+3. Set the entrypoint to `horizon.py:mcp` to expose the complete server,
+   including diary writes.
 4. Leave the dependency field blank so Horizon discovers `uv.lock` and
    `pyproject.toml`.
 5. Add `CRONOMETER_USERNAME` and `CRONOMETER_PASSWORD` as encrypted Production
@@ -164,9 +164,9 @@ Recommended secure configuration:
    OAuth sign-in. Remote connectors are account-level, so the same connector is
    then available in Claude mobile.
 
-The read-only entrypoint exposes food logs, nutrition, food search, targets,
-fasting, and biometrics, but it does not register `add_food_entry`,
-`remove_food_entry`, `add_custom_food`, `copy_day`, or `mark_day_complete`.
+Horizon OAuth protects access to the server. MCP tool annotations identify
+read-only operations and flag `remove_food_entry` as destructive so compatible
+clients can apply their normal confirmation policy to writes.
 
 ## Development
 

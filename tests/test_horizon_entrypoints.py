@@ -1,4 +1,4 @@
-"""Horizon entrypoint compatibility and safety-boundary tests."""
+"""Horizon entrypoint compatibility and remote-schema tests."""
 
 from __future__ import annotations
 
@@ -6,37 +6,36 @@ import asyncio
 
 from test_server_import import EXPECTED_TOOLS
 
-READ_ONLY_TOOLS = {
-    "get_biometrics",
-    "get_daily_nutrition",
-    "get_fasting_history",
-    "get_fasting_stats",
-    "get_food_details",
-    "get_food_log",
-    "get_macro_targets",
-    "get_nutrition_scores",
-    "list_biometrics",
-    "search_foods",
+WRITE_TOOLS = {
+    "add_custom_food",
+    "add_food_entry",
+    "copy_day",
+    "mark_day_complete",
+    "remove_food_entry",
 }
 
 
 def test_full_horizon_entrypoint_exposes_existing_surface():
+    from fastmcp import FastMCP
+
     from main import mcp
 
     tools = asyncio.run(mcp.list_tools())
 
-    assert {tool.name for tool in tools} == EXPECTED_TOOLS
-
-
-def test_read_only_horizon_entrypoint_omits_all_write_tools():
-    from fastmcp import FastMCP
-
-    from horizon_readonly import mcp
-
-    tools = asyncio.run(mcp.list_tools())
-
     assert isinstance(mcp, FastMCP)
-    assert {tool.name for tool in tools} == READ_ONLY_TOOLS
-    assert READ_ONLY_TOOLS < EXPECTED_TOOLS
-    assert all(tool.annotations.readOnlyHint is True for tool in tools)
+    assert {tool.name for tool in tools} == EXPECTED_TOOLS
     assert all(tool.output_schema is None for tool in tools)
+
+    annotations = {tool.name: tool.annotations for tool in tools}
+    assert all(annotations[name].readOnlyHint is False for name in WRITE_TOOLS)
+    assert annotations["remove_food_entry"].destructiveHint is True
+    assert all(
+        annotations[name].readOnlyHint is True for name in EXPECTED_TOOLS - WRITE_TOOLS
+    )
+
+
+def test_deployed_entrypoint_aliases_complete_surface():
+    from horizon import mcp as full_mcp
+    from horizon_readonly import mcp as deployed_mcp
+
+    assert deployed_mcp is full_mcp
